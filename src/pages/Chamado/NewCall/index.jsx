@@ -30,6 +30,7 @@ import {
   Sparkles,
   Timer,
   Lightbulb,
+  Utensils,
 } from "lucide-react"
 
 const CATEGORIAS = [
@@ -41,6 +42,7 @@ const CATEGORIAS = [
   { value: "ADM", label: "ADM", icon: Users, color: "bg-white" }, // substituto para "Admin"
   { value: "Comunicação", label: "Comunicação", icon: Mail, color: "bg-white" },
   { value: "Educacional/Assistência Social", label: "Educacional/Assistência Social", icon: Lightbulb, color: "bg-white" },
+  { value: "Cozinha", label: "Cozinha", icon: Utensils, color: "bg-white" },
   { value: "Diretoria", label: "Diretoria", icon: User, color: "bg-white" },
 ]
 
