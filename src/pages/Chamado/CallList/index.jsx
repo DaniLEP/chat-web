@@ -1,42 +1,48 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { db } from "../../../services/firebase"
-import { ref, onValue } from "firebase/database"
-import { useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react";
+import { db } from "../../../services/firebase";
+import { ref, onValue } from "firebase/database";
+import { useNavigate } from "react-router-dom";
 
 export default function ListaChamados() {
-  const [chamados, setChamados] = useState([])
-  const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
+  const [chamados, setChamados] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // Pega o UID do usuário logado no localStorage
+  const uid = localStorage.getItem("userUid") || "";
 
   useEffect(() => {
-    const uid = localStorage.getItem("userUid")
     if (!uid) {
-      setLoading(false)
-      setChamados([])
-      return
+      setLoading(false);
+      setChamados([]);
+      return;
     }
 
-    const chamadosRef = ref(db, `chamados/${uid}`)
+    // Referência dos chamados do usuário no Realtime Database
+    const chamadosRef = ref(db, `chamados/${uid}`);
+
+    // Escuta alterações em tempo real
     const unsubscribe = onValue(chamadosRef, (snapshot) => {
-      const data = snapshot.val()
+      const data = snapshot.val();
       if (data) {
         const lista = Object.entries(data).map(([id, chamado]) => ({
           id,
           ...chamado,
-        }))
-        setChamados(lista.reverse())
+        }));
+        // Inverte para mostrar do mais recente para o mais antigo
+        setChamados(lista.reverse());
       } else {
-        setChamados([])
+        setChamados([]);
       }
-      setLoading(false)
-    })
+      setLoading(false);
+    });
 
-    return () => unsubscribe()
-  }, [])
+    return () => unsubscribe();
+  }, [uid]);
 
-  // Ícones para categoria
+  // Ícones por categoria
   const getCategoryIcon = (categoria) => {
     const icons = {
       Hardware: "🖥️",
@@ -50,22 +56,22 @@ export default function ListaChamados() {
       TI: "💻",
       Financeiro: "💰",
       RH: "👥",
-    }
-    return icons[categoria] || "📋"
-  }
+    };
+    return icons[categoria] || "📋";
+  };
 
-  // Cores para prioridade
+  // Cores e estilos para prioridade
   const getPriorityColor = (prioridade) => {
     const colors = {
       Baixa: "bg-green-100 text-green-800 border-green-200",
       Média: "bg-yellow-100 text-yellow-800 border-yellow-200",
       Alta: "bg-orange-100 text-orange-800 border-orange-200",
       Crítica: "bg-red-100 text-red-800 border-red-200",
-    }
-    return colors[prioridade] || "bg-gray-100 text-gray-800 border-gray-200"
-  }
+    };
+    return colors[prioridade] || "bg-gray-100 text-gray-800 border-gray-200";
+  };
 
-  // Info para status
+  // Status com cor, ícone e animação
   const getStatusInfo = (status) => {
     const statusInfo = {
       Aberto: {
@@ -88,9 +94,9 @@ export default function ListaChamados() {
         icon: "⚫",
         pulse: false,
       },
-    }
-    return statusInfo[status] || statusInfo["Aberto"]
-  }
+    };
+    return statusInfo[status] || statusInfo["Aberto"];
+  };
 
   if (loading) {
     return (
@@ -107,7 +113,7 @@ export default function ListaChamados() {
           <p className="text-gray-500">Aguarde um momento...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (chamados.length === 0) {
@@ -126,7 +132,7 @@ export default function ListaChamados() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -160,8 +166,10 @@ export default function ListaChamados() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {chamados.map(({ id, protocolo, nome, categoria, prioridade, descricao, status }) => {
-            const statusInfo = getStatusInfo(status)
+          {chamados.map(({ id, protocolo, nome, categoria, prioridade, descricao, status, criadoEm }) => {
+            const statusInfo = getStatusInfo(status);
+            const createdDate = criadoEm ? new Date(criadoEm) : null;
+
             return (
               <div
                 key={id}
@@ -220,7 +228,7 @@ export default function ListaChamados() {
 
                   <button
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-                    onClick={() => navigate(`/chat/${id}`)}
+                    onClick={() => navigate(`/chat/${uid}/${id}`)}
                   >
                     <span>💬</span> Abrir Chat com T.I.
                   </button>
@@ -228,11 +236,18 @@ export default function ListaChamados() {
 
                 <div className="bg-gray-50 px-6 py-3 border-t border-gray-100">
                   <p className="text-xs text-gray-500 text-center">
-                    🕒 Criado em: {new Date().toLocaleDateString("pt-BR")}
+                    🕒 Criado em:{" "}
+                    {createdDate
+                      ? createdDate.toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })
+                      : "-"}
                   </p>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
 
@@ -249,5 +264,5 @@ export default function ListaChamados() {
         </div>
       </div>
     </div>
-  )
+  );
 }

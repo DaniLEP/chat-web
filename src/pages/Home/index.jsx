@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { db } from "@/services/firebase"
-import { ref, onValue } from "firebase/database"
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { db } from "@/services/firebase";
+import { ref, onValue } from "firebase/database";
 import {
   BarChart,
   CircleCheck,
@@ -17,70 +17,94 @@ import {
   Signal,
   Users,
   CalendarDays,
-} from "lucide-react"
-import { Progress } from "@/components/ui/progress"
+} from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 export default function HomePage() {
-  const navigate = useNavigate()
-  const [userName, setUserName] = useState("")
-  const [chamados, setChamados] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [lastUpdated, setLastUpdated] = useState(null)
+  const navigate = useNavigate();
+  const [userName, setUserName] = useState("");
+  const [userProfile, setUserProfile] = useState(null);
+  const [chamados, setChamados] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  // Função para validar e formatar timestamp
+  function formatTimestamp(ts) {
+    if (!ts) return null;
+    const date = new Date(ts);
+    return isNaN(date.getTime()) ? null : date.toISOString();
+  }
 
   useEffect(() => {
-    const nome = localStorage.getItem("userName") || "Usuário"
-    setUserName(nome)
+    const nome = localStorage.getItem("userName") || "Usuário";
+    setUserName(nome);
 
-    const uid = localStorage.getItem("userUid")
+    const uid = localStorage.getItem("userUid");
     if (!uid) {
-      setLoading(false)
-      setChamados([])
-      return
+      setLoading(false);
+      setChamados([]);
+      setUserProfile(null);
+      return;
     }
 
-    const chamadosRef = ref(db, `chamados/${uid}`)
-    const unsubscribe = onValue(chamadosRef, (snapshot) => {
-      const data = snapshot.val()
+    // Busca perfil do usuário
+    const perfilRef = ref(db, `usuarios/${uid}`);
+    const unsubscribePerfil = onValue(perfilRef, (snapshot) => {
+      const perfilDados = snapshot.val();
+      setUserProfile(perfilDados || null);
+    });
+
+    const chamadosRef = ref(db, `chamados/${uid}`);
+    const unsubscribeChamados = onValue(chamadosRef, (snapshot) => {
+      const data = snapshot.val();
       if (data) {
         const lista = Object.entries(data).map(([id, chamado]) => ({
           id,
           ...chamado,
-          dataAbertura: chamado.dataAbertura || new Date(chamado.timestamp).toISOString(),
-        }))
+          dataAbertura:
+            chamado.dataAbertura ||
+            formatTimestamp(chamado.timestamp) ||
+            new Date().toISOString(),
+        }));
+
         lista.sort(
-          (a, b) => new Date(b.dataAbertura).getTime() - new Date(a.dataAbertura).getTime()
-        )
-        setChamados(lista)
+          (a, b) =>
+            new Date(b.dataAbertura).getTime() - new Date(a.dataAbertura).getTime()
+        );
+        setChamados(lista);
       } else {
-        setChamados([])
+        setChamados([]);
       }
-      setLoading(false)
-      setLastUpdated(new Date())
-    })
+      setLoading(false);
+      setLastUpdated(new Date());
+    });
 
-    return () => unsubscribe()
-  }, [])
+    return () => {
+      unsubscribeChamados();
+      unsubscribePerfil();
+    };
+  }, []);
 
-  const totalChamados = chamados.length
-  const abertos = chamados.filter((c) => c.status === "Aberto").length
-  const fechados = chamados.filter((c) => c.status === "Fechado").length
-  const emAndamento = chamados.filter((c) => c.status === "Em Andamento").length
+  const totalChamados = chamados.length;
+  const abertos = chamados.filter((c) => c.status === "Aberto").length;
+  const Resolvidos = chamados.filter((c) => c.status === "Resolvidos").length;
+  const emAndamento = chamados.filter((c) => c.status === "Em Andamento").length;
 
-  const seteDiasAtras = new Date()
-  seteDiasAtras.setDate(seteDiasAtras.getDate() - 7)
-  seteDiasAtras.setHours(0, 0, 0, 0)
+  const seteDiasAtras = new Date();
+  seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+  seteDiasAtras.setHours(0, 0, 0, 0);
 
   const chamadosRecentes = chamados.filter((c) => {
-    const dataChamado = new Date(c.dataAbertura)
-    return dataChamado >= seteDiasAtras
-  }).length
+    const dataChamado = new Date(c.dataAbertura);
+    return dataChamado >= seteDiasAtras;
+  }).length;
 
   const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return "Bom dia"
-    if (hour < 18) return "Boa tarde"
-    return "Boa noite"
-  }
+    const hour = new Date().getHours();
+    if (hour < 12) return "Bom dia";
+    if (hour < 18) return "Boa tarde";
+    return "Boa noite";
+  };
 
   const StatCard = ({ title, value, subtitle, bgColor, textColor, icon: Icon }) => (
     <div
@@ -97,7 +121,7 @@ export default function HomePage() {
         </div>
       </div>
     </div>
-  )
+  );
 
   const ActionButton = ({ onClick, gradient, icon: Icon, title, description }) => (
     <button
@@ -110,9 +134,9 @@ export default function HomePage() {
         <div className="text-sm opacity-90">{description}</div>
       </div>
     </button>
-  )
+  );
 
-  const latestChamado = chamados.length > 0 ? chamados[0] : null
+  const latestChamado = chamados.length > 0 ? chamados[0] : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 font-sans">
@@ -123,6 +147,15 @@ export default function HomePage() {
             {getGreeting()}, {userName}!
             <span className="inline-block animate-wave origin-[70%_70%] ml-2">👋</span>
           </h1>
+
+          {userProfile && (
+            <div className="text-gray-700 text-lg md:text-xl max-w-3xl mx-auto mb-4 space-y-1">
+              <p><strong>Nome:</strong> {userProfile.nome || "Não informado"}</p>
+              <p><strong>Função:</strong> {userProfile.funcao || "Não informado"}</p>
+              <p><strong>Email:</strong> {userProfile.email || "Não informado"}</p>
+            </div>
+          )}
+
           <p className="text-gray-700 text-lg md:text-xl max-w-3xl mx-auto">
             Bem-vindo ao seu painel de chamados. Gerencie suas solicitações de forma simples e eficiente.
           </p>
@@ -165,7 +198,7 @@ export default function HomePage() {
               />
               <StatCard
                 title="Finalizados"
-                value={fechados}
+                value={Resolvidos}
                 subtitle="Concluídos com sucesso"
                 bgColor="bg-gradient-to-br from-green-500 to-green-600"
                 textColor="text-white"
@@ -188,11 +221,11 @@ export default function HomePage() {
                     </div>
                     <div className="text-center p-5 bg-green-50 rounded-lg border border-green-100">
                       <div className="text-3xl font-bold text-green-700 mb-1">
-                        {totalChamados > 0 ? Math.round((fechados / totalChamados) * 100) : 0}%
+                        {totalChamados > 0 ? Math.round((Resolvidos / totalChamados) * 100) : 0}%
                       </div>
                       <div className="w-full mt-2">
                         <Progress
-                          value={totalChamados > 0 ? Math.round((fechados / totalChamados) * 100) : 0}
+                          value={totalChamados > 0 ? Math.round((Resolvidos / totalChamados) * 100) : 0}
                           className="h-2 bg-green-200"
                           indicatorClassName="bg-green-600"
                         />
@@ -201,7 +234,9 @@ export default function HomePage() {
                     </div>
                     <div className="text-center p-5 bg-purple-50 rounded-lg border border-purple-100">
                       <div className="text-xl font-bold text-purple-700 mb-1 truncate">
-                        {latestChamado ? latestChamado.assunto || `Chamado #${latestChamado.id.slice(-4)}` : "N/A"}
+                        {latestChamado
+                          ? latestChamado.assunto || `Chamado #${latestChamado.id.slice(-4)}`
+                          : "N/A"}
                       </div>
                       <div className="text-purple-700 font-medium text-md">Último Chamado</div>
                     </div>
@@ -216,7 +251,7 @@ export default function HomePage() {
               )}
 
               {/* Quick Tips */}
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-lg p-10 text-white w-303">
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-lg p-10 text-white w-149">
                 <h2 className="text-2xl font-bold mb-5 flex items-center">
                   <Lightbulb className="mr-3 text-white" size={24} />
                   Dicas Rápidas
@@ -238,10 +273,6 @@ export default function HomePage() {
                       <p className="text-sm opacity-90">
                         Receba notificações sobre o status dos seus chamados e interaja com a equipe de suporte.
                       </p>
-                    </div>
-
-                    <div>
-                      <img src="./" alt="" />
                     </div>
                   </div>
                 </div>
@@ -304,7 +335,7 @@ export default function HomePage() {
         </footer>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes wave {
           0% {
             transform: rotate(0deg);
@@ -346,5 +377,5 @@ export default function HomePage() {
         }
       `}</style>
     </div>
-  )
+  );
 }

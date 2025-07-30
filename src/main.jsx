@@ -10,8 +10,6 @@ import ChatTI from './pages/Chat'
 import HomePage from './pages/Home'
 const App = lazy(() => import('./App.jsx'))
 
-
-// Componente fallback com spinner simples
 function Loader() {
   return (
     <div style={{
@@ -23,7 +21,7 @@ function Loader() {
     }}>
       <div style={{
         border: '8px solid #ddd',
-        borderTop: '8px solid #4f46e5', // roxo (tailwind indigo-600)
+        borderTop: '8px solid #4f46e5',
         borderRadius: '50%',
         width: '60px',
         height: '60px',
@@ -42,16 +40,14 @@ function Loader() {
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <App />,         // Rota pai que contém o layout e <Outlet />
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <Login /> },
-      { path: '/abrir-chamado', element: <AberturaChamado /> },
-      { path: '/lista-chamados', element: <ListaChamados /> },
-      { path: '/home', element: <HomePage /> },
-      { path: '/chat/:chamadoId', element: <ChatTI /> },
-
-
+      { index: true, element: <Login /> },            // "/"
+      { path: 'abrir-chamado', element: <AberturaChamado /> },  // "/abrir-chamado"
+      { path: 'lista-chamados', element: <ListaChamados /> },  // "/lista-chamados"
+      { path: 'home', element: <HomePage /> },        // "/home"
+      { path: 'chat/:uid/:chamadoId', element: <ChatTI /> },   // "/chat/:uid/:chamadoId"
     ],
   },
 ])
