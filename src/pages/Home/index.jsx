@@ -28,7 +28,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
 
-  // Função para validar e formatar timestamp
   function formatTimestamp(ts) {
     if (!ts) return null;
     const date = new Date(ts);
@@ -47,7 +46,6 @@ export default function HomePage() {
       return;
     }
 
-    // Busca perfil do usuário
     const perfilRef = ref(db, `usuarios/${uid}`);
     const unsubscribePerfil = onValue(perfilRef, (snapshot) => {
       const perfilDados = snapshot.val();
@@ -69,7 +67,8 @@ export default function HomePage() {
 
         lista.sort(
           (a, b) =>
-            new Date(b.dataAbertura).getTime() - new Date(a.dataAbertura).getTime()
+            new Date(b.dataAbertura).getTime() -
+            new Date(a.dataAbertura).getTime()
         );
         setChamados(lista);
       } else {
@@ -139,24 +138,24 @@ export default function HomePage() {
   const latestChamado = chamados.length > 0 ? chamados[0] : null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 font-sans">
-      <div className="max-w-7xl w-full mx-auto p-4 md:p-8 flex-grow flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 font-sans">
+      <div className="max-w-7xl w-full mx-auto px-4 py-6 md:p-8 flex-grow flex flex-col">
         {/* Header */}
         <header className="text-center mb-8 bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-md border border-gray-100 animate-fade-in">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-3 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-gray-900 mb-3 leading-tight">
             {getGreeting()}, {userName}!
             <span className="inline-block animate-wave origin-[70%_70%] ml-2">👋</span>
           </h1>
 
           {userProfile && (
-            <div className="text-gray-700 text-lg md:text-xl max-w-3xl mx-auto mb-4 space-y-1">
+            <div className="text-gray-700 text-base sm:text-lg md:text-xl max-w-3xl mx-auto mb-4 space-y-1">
               <p><strong>Nome:</strong> {userProfile.nome || "Não informado"}</p>
               <p><strong>Função:</strong> {userProfile.funcao || "Não informado"}</p>
               <p><strong>Email:</strong> {userProfile.email || "Não informado"}</p>
             </div>
           )}
 
-          <p className="text-gray-700 text-lg md:text-xl max-w-3xl mx-auto">
+          <p className="text-gray-700 text-base sm:text-lg md:text-xl max-w-3xl mx-auto">
             Bem-vindo ao seu painel de chamados. Gerencie suas solicitações de forma simples e eficiente.
           </p>
         </header>
@@ -170,8 +169,8 @@ export default function HomePage() {
           </section>
         ) : (
           <main className="flex-grow flex flex-col justify-between gap-8">
-            {/* Statistics Grid */}
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Estatísticas */}
+            <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard
                 title="Total de Chamados"
                 value={totalChamados}
@@ -206,8 +205,8 @@ export default function HomePage() {
               />
             </section>
 
-            {/* Recent Activity & Quick Tips */}
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Atividade e Dicas */}
+            <section className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-6">
               {totalChamados > 0 && (
                 <div className="bg-white rounded-2xl shadow-lg p-7 border border-gray-100">
                   <h2 className="text-2xl font-bold text-gray-800 mb-5 flex items-center">
@@ -250,8 +249,8 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Quick Tips */}
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-lg p-10 text-white w-149">
+              {/* Dicas */}
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-lg p-10 text-white">
                 <h2 className="text-2xl font-bold mb-5 flex items-center">
                   <Lightbulb className="mr-3 text-white" size={24} />
                   Dicas Rápidas
@@ -279,8 +278,8 @@ export default function HomePage() {
               </div>
             </section>
 
-            {/* Action Buttons */}
-            <section className="grid grid-cols-10 md:grid-cols-2 gap-6">
+            {/* Botões de ação */}
+            <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <ActionButton
                 onClick={() => navigate("/abrir-chamado")}
                 gradient="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
@@ -316,7 +315,7 @@ export default function HomePage() {
               day: "numeric",
             })}
           </p>
-          <div className="flex items-center justify-center space-x-6 mt-4 text-xs font-medium">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 text-xs font-medium">
             <span className="flex items-center space-x-1 text-green-600">
               <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
               <span>Sistema Online</span>
@@ -337,40 +336,20 @@ export default function HomePage() {
 
       <style>{`
         @keyframes wave {
-          0% {
-            transform: rotate(0deg);
-          }
-          15% {
-            transform: rotate(14deg);
-          }
-          30% {
-            transform: rotate(-8deg);
-          }
-          45% {
-            transform: rotate(14deg);
-          }
-          60% {
-            transform: rotate(-4deg);
-          }
-          75% {
-            transform: rotate(10deg);
-          }
-          100% {
-            transform: rotate(0deg);
-          }
+          0% { transform: rotate(0deg); }
+          15% { transform: rotate(14deg); }
+          30% { transform: rotate(-8deg); }
+          45% { transform: rotate(14deg); }
+          60% { transform: rotate(-4deg); }
+          75% { transform: rotate(10deg); }
+          100% { transform: rotate(0deg); }
         }
         .animate-wave {
           animation: wave 2.5s infinite;
         }
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in {
           animation: fadeIn 0.5s ease-out forwards;

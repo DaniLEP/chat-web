@@ -29,13 +29,22 @@ import {
   Users,
   Sparkles,
   Timer,
+  Lightbulb,
 } from "lucide-react"
 
 const CATEGORIAS = [
-  { value: "TI", label: "TI", icon: Computer, color: "bg-blue-500" },
-  { value: "Financeiro", label: "Financeiro", icon: DollarSign, color: "bg-green-500" },
-  { value: "RH", label: "RH", icon: Users, color: "bg-purple-500" },
+  { value: "TI", label: "TI", icon: Computer, color: "bg-white" },
+  { value: "Financeiro", label: "Financeiro", icon: DollarSign, color: "bg-white" },
+  { value: "RH", label: "RH", icon: Users, color: "bg-white" },
+  { value: "DI", label: "DI", icon: Shield, color: "bg-white" },
+  { value: "Mentoria/Projetos", label: "Mentoria/Projetos", icon: Sparkles, color: "bg-white" },
+  { value: "ADM", label: "ADM", icon: Users, color: "bg-white" }, // substituto para "Admin"
+  { value: "Comunicação", label: "Comunicação", icon: Mail, color: "bg-white" },
+  { value: "Educacional/Assistência Social", label: "Educacional/Assistência Social", icon: Lightbulb, color: "bg-white" },
+  { value: "Diretoria", label: "Diretoria", icon: User, color: "bg-white" },
 ]
+
+
 
 const PRIORIDADES = [
   { value: "Baixa", label: "Baixa", icon: Shield, color: "bg-green-100 text-green-800 border-green-200" },
