@@ -1,11 +1,16 @@
-"use client"
-
 import { useState, useEffect, useRef } from "react"
 import { ref, push } from "firebase/database"
 import { db } from "@/services/firebase"
+import { getAuth, onAuthStateChanged } from "firebase/auth"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -39,14 +44,12 @@ const CATEGORIAS = [
   { value: "RH", label: "RH", icon: Users, color: "bg-white" },
   { value: "DI", label: "DI", icon: Shield, color: "bg-white" },
   { value: "Mentoria/Projetos", label: "Mentoria/Projetos", icon: Sparkles, color: "bg-white" },
-  { value: "ADM", label: "ADM", icon: Users, color: "bg-white" }, // substituto para "Admin"
+  { value: "ADM", label: "ADM", icon: Users, color: "bg-white" },
   { value: "Comunicação", label: "Comunicação", icon: Mail, color: "bg-white" },
   { value: "Educacional/Assistência Social", label: "Educacional/Assistência Social", icon: Lightbulb, color: "bg-white" },
   { value: "Cozinha", label: "Cozinha", icon: Utensils, color: "bg-white" },
   { value: "Diretoria", label: "Diretoria", icon: User, color: "bg-white" },
 ]
-
-
 
 const PRIORIDADES = [
   { value: "Baixa", label: "Baixa", icon: Shield, color: "bg-green-100 text-green-800 border-green-200" },
@@ -70,7 +73,6 @@ export default function AberturaChamado() {
   const [previewProtocolo, setPreviewProtocolo] = useState("")
   const [formProgress, setFormProgress] = useState(0)
   const [isFormValid, setIsFormValid] = useState(false)
-
   const nomeInputRef = useRef(null)
 
   // Atualizar data/hora a cada segundo
@@ -81,36 +83,39 @@ export default function AberturaChamado() {
     return () => clearInterval(timer)
   }, [])
 
-  // Carregar dados do usuário automaticamente
+  // Carregar dados do usuário autenticado
   useEffect(() => {
-    const loadUserData = () => {
-      try {
-        // Tentar carregar do localStorage primeiro
-        const userData = localStorage.getItem("usuarios")
-        if (userData) {
-          const { nome, email } = JSON.parse(userData)
+    const auth = getAuth()
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const nome = user.displayName || ""
+        const email = user.email || ""
+
+        setForm((prev) => ({
+          ...prev,
+          nome,
+          email,
+        }))
+
+        localStorage.setItem("userUid", user.uid)
+        localStorage.setItem("userData", JSON.stringify({ nome, email }))
+      } else {
+        // fallback para localStorage
+        const storedData = localStorage.getItem("userData")
+        if (storedData) {
+          const { nome, email } = JSON.parse(storedData)
           setForm((prev) => ({
             ...prev,
             nome: nome || "",
             email: email || "",
           }))
-        } else {
-          // Fallback: tentar carregar de outras fontes
-          const savedName = localStorage.getItem("nome") || ""
-          const savedEmail = localStorage.getItem("email") || ""
-          setForm((prev) => ({
-            ...prev,
-            nome: savedName,
-            email: savedEmail,
-          }))
         }
-      } catch (error) {
-        console.warn("Erro ao carregar dados do usuário:", error)
       }
-    }
 
-    loadUserData()
-    nomeInputRef.current?.focus()
+      nomeInputRef.current?.focus()
+    })
+
+    return () => unsubscribe()
   }, [])
 
   // Gerar preview do protocolo
@@ -121,12 +126,14 @@ export default function AberturaChamado() {
       const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase()
       const randomNum = Math.floor(100 + Math.random() * 900)
       setPreviewProtocolo(`${prefix}-${categoryCode}-${randomStr}-${randomNum}`)
+    } else {
+      setPreviewProtocolo("")
     }
   }, [form.categoria])
 
   // Calcular progresso do formulário
   useEffect(() => {
-    const fields = ["nome", "email", "categoria", "prioridade", "descricao"]
+    const fields = ["categoria", "prioridade", "descricao"]
     const filledFields = fields.filter((field) => form[field].trim() !== "").length
     const progress = (filledFields / fields.length) * 100
     setFormProgress(progress)
@@ -231,10 +238,10 @@ export default function AberturaChamado() {
 
       toast.success(`Chamado criado com sucesso! Protocolo: ${protocolo}`)
 
-      // Reset form
+      // Reset form mantendo nome e email
       setForm({
-        nome: form.nome, // Manter nome
-        email: form.email, // Manter email
+        nome: form.nome,
+        email: form.email,
         categoria: "",
         prioridade: "",
         descricao: "",
@@ -395,6 +402,7 @@ export default function AberturaChamado() {
                           onChange={handleChange}
                           placeholder="Seu nome completo"
                           required
+                          readOnly
                           ref={nomeInputRef}
                           className={`transition-all duration-200 ${errors.nome ? "border-red-500 focus:border-red-500" : "focus:border-blue-500"}`}
                           aria-invalid={errors.nome ? "true" : "false"}
@@ -420,6 +428,7 @@ export default function AberturaChamado() {
                           onChange={handleChange}
                           placeholder="seu@email.com"
                           required
+                          readOnly
                           className={`transition-all duration-200 ${errors.email ? "border-red-500 focus:border-red-500" : "focus:border-blue-500"}`}
                           aria-invalid={errors.email ? "true" : "false"}
                         />

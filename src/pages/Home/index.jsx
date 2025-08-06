@@ -323,7 +323,7 @@ export default function HomePage() {
             <span className="text-gray-400">•</span>
             <span className="flex items-center space-x-1 text-blue-600">
               <Users size={14} />
-              <span>Suporte 24/7</span>
+              <span>Suporte 24hrs</span>
             </span>
             <span className="text-gray-400">•</span>
             <span className="flex items-center space-x-1 text-purple-600">
